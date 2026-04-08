@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ResumeFlow AI | Gold Achievement Edition</title>
+<!-- THE BEAUTY: Keeps your buttons Gold -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- THE FUNCTION: Reliable stable version for downloading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://googleapis.com');
+        body, nav, .form-input, button, h2, h3, #matchCounter, input, textarea, select { font-family: 'Outfit', sans-serif !important; }
+        #resume-preview, #resume-preview * { font-family: 'Inter', sans-serif !important; }
+        body { background-color: #fcfcfc; color: #334155; margin: 0; overflow: hidden; }
+        .app-height { height: calc(100vh - 110px); }
+        .flex-container { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; width: 100vw; }
+        .left-panel { width: 50%; height: 100%; overflow-y: auto; background: white; border-right: 1px solid #e2e8f0; padding: 3rem; }
+        .right-panel { width: 50%; height: 100%; overflow: hidden; background: #f8fafc; display: flex; justify-content: center; align-items: flex-start; padding-top: 2rem; border-left: 1px solid #e2e8f0; }
+        .form-input { width: 100%; padding: 1.2rem; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 18px; font-size: 1.15rem; outline: none; margin-bottom: 1.2rem; }
+        #resume-preview { width: 210mm; min-height: 297mm; background: white; padding: 20mm; box-shadow: 0 30px 60px rgba(0,0,0,0.12); transform: scale(0.42); transform-origin: top center; position: relative; }
+        
+        /* Photo Frame Logic */
+        .photo-frame { position: absolute; top: 20mm; right: 20mm; border: 5px solid #b89336; border-radius: 12px; overflow: hidden; display: none; background: #eee; }
+        
+        /* Passport Mode (1:1 Ratio) */
+        .passport-size { width: 150px; height: 150px; }
+        .passport-size img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+        
+        /* Free Mode (Original Ratio) */
+        .free-size { width: 150px; height: auto; max-height: 200px; }
+        .free-size img { width: 100%; height: auto; }
+
+        .btn-gold { background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C); background-size: 400% 400%; color: #4a3703 !important; animation: gold-shine 3s ease infinite, gold-pulse 2s infinite; }
+        @keyframes gold-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes gold-pulse { 0% { box-shadow: 0 0 0 0 rgba(185, 147, 54, 0.7); } 70% { box-shadow: 0 0 0 25px rgba(185, 147, 54, 0); } 100% { box-shadow: 0 0 0 0 rgba(185, 147, 54, 0); } }
+        .strength-bar { height: 8px; width: 0%; background: #b89336; transition: width 0.5s ease; border-radius: 4px; }
+    </style>
+</head>
+<body class="theme-gold">
+    <nav class="h-[110px] bg-white border-b px-16 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center gap-4"><div class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-2xl">R</div><span class="text-3xl font-black">Resume<span class="text-[#b89336]">Flow</span></span></div>
+       <button onclick="downloadPDF()" class="btn-gold px-10 py-4 rounded-[2rem] font-black uppercase tracking-widest hover:scale-105 transition-all">Download PDF ✨</button>
+    </nav>
+
+    <div class="flex-container app-height">
+        <div class="left-panel pb-20">
+            <div class="max-w-xl mx-auto space-y-10">
+                <div>
+                    <h3 class="text-xs font-black text-slate-400 uppercase mb-6">Identity & Photo</h3>
+                    <div class="flex gap-4 mb-4">
+                        <div class="w-1/2">
+                            <label class="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Upload Photo</label>
+                            <input type="file" id="inPhoto" accept="image/*" onchange="handlePhoto(event)" class="form-input text-xs py-2">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Photo Style</label>
+                            <select id="photoStyle" onchange="toggleStyle()" class="form-input text-sm py-2">
+                                <option value="free-size">Natural / Full</option>
+                                <option value="passport-size">Passport (1:1 Crop)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <input type="text" id="inName" placeholder="Full Name" oninput="update()" class="form-input font-bold text-2xl">
+                    <div class="flex gap-4">
+                        <input type="text" id="inRole" placeholder="Job Title" oninput="update()" class="w-1/2 form-input font-bold">
+                        <input type="email" id="inEmail" placeholder="Email" oninput="update()" class="w-1/2 form-input">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-black text-slate-400 uppercase">ATS Strength</h3>
+                        <span id="matchCounter" class="text-xs font-black text-amber-800">0% Optimized</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2 mb-6"><div id="strengthBar" class="strength-bar"></div></div>
+                    <textarea id="jobDesc" placeholder="Paste Job Description..." oninput="checkATS()" class="w-full p-5 bg-amber-50/30 border-2 border-amber-100 rounded-2xl h-24 mb-4 outline-none"></textarea>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-black text-slate-400 uppercase mb-4">Achievements</h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="achInput" placeholder="Ex: Lead team of 10" class="form-input mb-0">
+                        <button onclick="addAch()" class="bg-slate-800 text-white px-6 rounded-2xl font-bold hover:bg-black transition-all">Add</button>
+                    </div>
+                    <div id="achList" class="space-y-2"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-black text-slate-400 uppercase mb-6">Bio</h3>
+                    <textarea id="inSummary" placeholder="Professional Summary..." oninput="update()" class="form-input min-h-[150px]"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div id="resume-preview">
+                <!-- Frame defaults to free-size, changed via JS -->
+                <div id="photoContainer" class="photo-frame free-size"><img id="resPhoto" src=""></div>
+                
+                <div class="border-b-[10px] pb-12 mb-12 mr-[180px]" style="border-color: #b89336">
+                    <h1 id="outName" class="text-6xl font-black uppercase text-slate-900 leading-none">Full Name</h1>
+                    <p id="outRole" class="text-3xl font-bold opacity-40">Role</p>
+                    <p id="outEmail" class="text-xl text-slate-400 mt-6">email@address.com</p>
+                </div>
+
+                <section class="mb-10">
+                    <h3 class="text-sm font-black uppercase tracking-[0.4em] mb-6" style="color: #b89336">Profile</h3>
+                    <p id="outSummary" class="text-xl leading-relaxed text-slate-700 font-medium">Your summary here...</p>
+                </section>
+
+                <section>
+                    <h3 class="text-sm font-black uppercase tracking-[0.4em] mb-6" style="color: #b89336">Key Achievements</h3>
+                    <ul id="outAch" class="list-disc pl-6 space-y-4 text-xl font-bold text-slate-800">
+                        <li>Start adding achievements on the left!</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let achievements = [];
+        const keywords = ["Leadership", "Python", "Strategy", "Management", "Analysis", "Data", "SQL", "Budget", "Communication"];
+
+        function update() {
+            document.getElementById('outName').innerText = document.getElementById('inName').value || "Full Name";
+            document.getElementById('outRole').innerText = document.getElementById('inRole').value || "Role";
+            document.getElementById('outEmail').innerText = document.getElementById('inEmail').value || "email@address.com";
+            document.getElementById('outSummary').innerText = document.getElementById('inSummary').value || "Your summary here...";
+        }
+
+        function handlePhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('resPhoto').src = e.target.result;
+                    document.getElementById('photoContainer').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleStyle() {
+            const style = document.getElementById('photoStyle').value;
+            const container = document.getElementById('photoContainer');
+            container.className = `photo-frame ${style}`;
+        }
+
+        function addAch() {
+            const val = document.getElementById('achInput').value;
+            if (val) {
+                achievements.push(val);
+                document.getElementById('achInput').value = "";
+                renderAch();
+            }
+        }
+
+        function renderAch() {
+            const list = document.getElementById('achList');
+            const preview = document.getElementById('outAch');
+            list.innerHTML = achievements.map((a, i) => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl text-sm font-medium border">
+                    <span>${a}</span><button onclick="removeAch(${i})" class="text-red-500 font-bold px-2">×</button>
+                </div>`).join('');
+            preview.innerHTML = achievements.map(a => `<li>${a}</li>`).join('') || "<li>Start adding achievements on the left!</li>";
+            checkATS();
+        }
+
+        function removeAch(i) { achievements.splice(i, 1); renderAch(); }
+
+        function checkATS() {
+            const jd = document.getElementById('jobDesc').value.toLowerCase();
+            if(!jd) return;
+            let matches = keywords.filter(word => jd.includes(word.toLowerCase())).length;
+            const score = Math.round((matches / keywords.length) * 100);
+            document.getElementById('strengthBar').style.width = score + "%";
+            document.getElementById('matchCounter').innerText = score + "% Optimized";
+        }
+
+function downloadPDF() {
+    const element = document.getElementById('resume-preview');
+    
+    // Save original small size (0.42)
+    const originalTransform = element.style.transform;
+    
+    // Step 1: Temporarily reset scale to 1 for high-quality export
+    element.style.transform = "scale(1)";
+
+    const opt = {
+        margin: 0,
+        filename: 'Gold_Achievement_Resume.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Step 2: Use the library to download
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Step 3: Put the UI back to the 0.42 scale immediately
+        element.style.transform = originalTransform;
+    }).catch(err => {
+        // If it fails, still put the UI back
+        element.style.transform = originalTransform;
+        console.error("PDF Export failed:", err);
+    });
+}
+
+          </script>
+</body>
+</html>
